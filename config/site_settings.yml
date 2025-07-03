@@ -4060,3 +4060,7 @@ experimental:
     choices:
       - "foundation"
       - "horizon"
+  experimental_grid_layout:
+    client: true
+    default: true
+    hidden: true
