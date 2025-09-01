@@ -2,7 +2,7 @@
 
 module RouteFormat
   def self.username
-    /[%\w.\-]+?/
+    /[%\w.\-#{SiteSetting.allowed_unicode_username_characters}]+?/
   end
 
   def self.backup
