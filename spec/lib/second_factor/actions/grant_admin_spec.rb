@@ -12,11 +12,6 @@ RSpec.describe SecondFactor::Actions::GrantAdmin do
 
   after { cleanup_admin_confirmation_redis_keys }
 
-  before do
-    SiteSetting.unicode_usernames = true
-    SiteSetting.allowed_unicode_username_characters = "[äöüßÄÖÜẞ]"
-  end
-
   def params(hash)
     ActionController::Parameters.new(hash)
   end
@@ -59,12 +54,22 @@ RSpec.describe SecondFactor::Actions::GrantAdmin do
     end
 
     it "respects allowed_unicode_username_characters in username" do
-      user.update!(username: "Anführerin")
+      begin
+        SiteSetting.unicode_usernames = true
+        SiteSetting.allowed_unicode_username_characters = "[äöüßÄÖÜẞ]"
 
-      instance = create_instance(admin)
-      hash = instance.second_factor_auth_required!(params({ user_id: user.id }))
-      expect(hash[:callback_params]).to eq({ user_id: user.id })
-      expect(hash[:redirect_url]).to eq("/admin/users/#{user.id}/Anf%C3%BChrerin")
+        Rails.application.reload_routes!
+
+        user.update!(username: "Anführerin")
+
+        instance = create_instance(admin)
+        hash = instance.second_factor_auth_required!(params({ user_id: user.id }))
+        expect(hash[:callback_params]).to eq({ user_id: user.id })
+        expect(hash[:redirect_url]).to eq("/admin/users/#{user.id}/Anf%C3%BChrerin")
+      ensure
+        SiteSetting.allowed_unicode_username_characters = ""
+        Rails.application.reload_routes!
+      end
     end
 
     it "ensures the acting user is admin" do
