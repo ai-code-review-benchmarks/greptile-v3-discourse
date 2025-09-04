@@ -71,14 +71,16 @@ export default class DModal extends Component {
     if (this.site.mobileView) {
       this.animating = true;
 
-      await el.animate(
-        [{ transform: "translateY(100%)" }, { transform: "translateY(0)" }],
-        {
-          duration: getMaxAnimationTimeMs(),
-          easing: "ease",
-          fill: "forwards",
-        }
-      ).finished;
+      waitForPromise(
+        el.animate(
+          [{ transform: "translateY(100%)" }, { transform: "translateY(0)" }],
+          {
+            duration: getMaxAnimationTimeMs(),
+            easing: "ease",
+            fill: "forwards",
+          }
+        ).finished
+      );
 
       this.animating = false;
     }
