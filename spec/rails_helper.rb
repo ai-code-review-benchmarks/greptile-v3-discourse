@@ -498,6 +498,9 @@ RSpec.configure do |config|
             @driver.send(:session).evaluate_async_script(
               "window.emberSettled ? window.emberSettled('#{path}').then(arguments[0]) : arguments[0]()",
             )
+
+            raise "Took too long" if (Time.now.to_f - now) > 5
+
             puts "#{method_name}: #{Time.now.to_f - now}"
           end
         end
@@ -511,6 +514,7 @@ RSpec.configure do |config|
           @driver.send(:session).evaluate_async_script(
             "window.emberSettled ? window.emberSettled('#{path}').then(arguments[0]) : arguments[0]()",
           )
+          raise "Took too long" if (Time.now.to_f - now) > 5
           puts "VISIT #{path}: #{Time.now.to_f - now}"
         end
       end
