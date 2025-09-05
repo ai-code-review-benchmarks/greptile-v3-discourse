@@ -118,24 +118,14 @@ schema:
         exclude:
           - "id"
         add:
-          - name: "field_id"
-            datatype: numeric
           - name: "is_multiselect_field"
             datatype: boolean
       indexes:
-        - name: "ucf_multiselect_by_field_id_index"
-          columns: [ "user_id", "field_id", "value" ]
-          unique: true
-          condition: "WHERE is_multiselect_field = TRUE AND field_id IS NOT NULL"
-        - name: "ucf_not_multiselect_by_field_id_index"
-          columns: [ "user_id", "field_id" ]
-          unique: true
-          condition: "WHERE is_multiselect_field = FALSE AND field_id IS NOT NULL"
-        - name: "ucf_multiselect_by_name_index"
+        - name: "user_custom_fields_multiselect_index"
           columns: [ "user_id", "name", "value" ]
           unique: true
           condition: "WHERE is_multiselect_field = TRUE"
-        - name: "ucf_not_multiselect_by_name_index"
+        - name: "user_custom_fields_not_multiselect_index"
           columns: [ "user_id", "name" ]
           unique: true
           condition: "WHERE is_multiselect_field = FALSE"
@@ -152,6 +142,27 @@ schema:
       columns:
         exclude:
           - "id"
+    user_field_values:
+      copy_of: user_custom_fields
+      columns:
+        exclude:
+          - "id"
+          - "name"
+        add:
+          - name: "field_id"
+            datatype: numeric
+            nullable: false
+          - name: "is_multiselect_field"
+            datatype: boolean
+      indexes:
+        - name: "user_field_values_multiselect_index"
+          columns: [ "user_id", "field_id", "value" ]
+          unique: true
+          condition: "WHERE is_multiselect_field = TRUE"
+        - name: "user_field_values_not_multiselect_index"
+          columns: [ "user_id", "field_id" ]
+          unique: true
+          condition: "WHERE is_multiselect_field = FALSE"
     user_fields:
       columns:
         exclude:

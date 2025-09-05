@@ -194,17 +194,14 @@ CREATE TABLE tags
 CREATE TABLE user_custom_fields
 (
     created_at           DATETIME,
-    field_id             NUMERIC,
     is_multiselect_field BOOLEAN,
     name                 TEXT     NOT NULL,
     user_id              NUMERIC  NOT NULL,
     value                TEXT
 );
 
-CREATE UNIQUE INDEX ucf_multiselect_by_field_id_index ON user_custom_fields (user_id, field_id, value) WHERE is_multiselect_field = TRUE AND field_id IS NOT NULL;
-CREATE UNIQUE INDEX ucf_not_multiselect_by_field_id_index ON user_custom_fields (user_id, field_id) WHERE is_multiselect_field = FALSE AND field_id IS NOT NULL;
-CREATE UNIQUE INDEX ucf_multiselect_by_name_index ON user_custom_fields (user_id, name, value) WHERE is_multiselect_field = TRUE;
-CREATE UNIQUE INDEX ucf_not_multiselect_by_name_index ON user_custom_fields (user_id, name) WHERE is_multiselect_field = FALSE;
+CREATE UNIQUE INDEX user_custom_fields_multiselect_index ON user_custom_fields (user_id, name, value) WHERE is_multiselect_field = TRUE;
+CREATE UNIQUE INDEX user_custom_fields_not_multiselect_index ON user_custom_fields (user_id, name) WHERE is_multiselect_field = FALSE;
 
 CREATE TABLE user_emails
 (
@@ -222,6 +219,18 @@ CREATE TABLE user_field_options
     created_at    DATETIME,
     PRIMARY KEY (user_field_id, value)
 );
+
+CREATE TABLE user_field_values
+(
+    created_at           DATETIME,
+    field_id             NUMERIC  NOT NULL,
+    is_multiselect_field BOOLEAN,
+    user_id              NUMERIC  NOT NULL,
+    value                TEXT
+);
+
+CREATE UNIQUE INDEX user_field_values_multiselect_index ON user_field_values (user_id, field_id, value) WHERE is_multiselect_field = TRUE;
+CREATE UNIQUE INDEX user_field_values_not_multiselect_index ON user_field_values (user_id, field_id) WHERE is_multiselect_field = FALSE;
 
 CREATE TABLE user_fields
 (
