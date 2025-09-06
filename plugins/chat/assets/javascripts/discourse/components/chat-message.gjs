@@ -632,6 +632,7 @@ export default class ChatMessage extends Component {
                   @uploads={{@message.uploads}}
                   @edited={{@message.edited}}
                   @decorate={{this.decorateCookedMessage}}
+                  @highlightedText={{@highlightedText}}
                 >
                   {{#if @message.reactions.length}}
                     <div class="chat-message-reaction-list">

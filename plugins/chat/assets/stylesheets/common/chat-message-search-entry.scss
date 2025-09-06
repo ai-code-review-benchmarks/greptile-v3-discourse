@@ -11,6 +11,10 @@
   border-radius: var(--d-border-radius);
   cursor: pointer;
 
+  .search-highlight {
+    background: var(--highlight-medium);
+  }
+
   > * {
     pointer-events: none;
   }

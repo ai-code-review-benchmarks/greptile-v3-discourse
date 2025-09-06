@@ -119,6 +119,7 @@ export default class ChatRouteChannelInfoSearch extends Component {
                     @message={{message}}
                     @disableMouseEvents={{true}}
                     @includeSeparator={{false}}
+                    @highlightedText={{@query}}
                   />
                 </div>
               {{/each}}
