@@ -60,9 +60,15 @@ RSpec.describe Chat::SearchMessage do
         fab!(:alice) { Fabricate(:user, username: "alice") }
         fab!(:bob) { Fabricate(:user, username: "bob") }
 
-        fab!(:alice_message_1) { Fabricate(:chat_message, chat_channel: channel, user: alice, message: "hello from alice") }
-        fab!(:alice_message_2) { Fabricate(:chat_message, chat_channel: channel, user: alice, message: "testing something") }
-        fab!(:bob_message) { Fabricate(:chat_message, chat_channel: channel, user: bob, message: "hello from bob") }
+        fab!(:alice_message_1) do
+          Fabricate(:chat_message, chat_channel: channel, user: alice, message: "hello from alice")
+        end
+        fab!(:alice_message_2) do
+          Fabricate(:chat_message, chat_channel: channel, user: alice, message: "testing something")
+        end
+        fab!(:bob_message) do
+          Fabricate(:chat_message, chat_channel: channel, user: bob, message: "hello from bob")
+        end
 
         before do
           [alice_message_1, alice_message_2, bob_message].each do |message|
@@ -87,13 +93,18 @@ RSpec.describe Chat::SearchMessage do
         end
 
         context "when searching with @me" do
-          fab!(:current_user_message) { Fabricate(:chat_message, chat_channel: channel, user: current_user, message: "my message") }
+          fab!(:current_user_message) do
+            Fabricate(
+              :chat_message,
+              chat_channel: channel,
+              user: current_user,
+              message: "my message",
+            )
+          end
 
           let(:term) { "@me" }
 
-          before do
-            SearchIndexer.index(current_user_message, force: true)
-          end
+          before { SearchIndexer.index(current_user_message, force: true) }
 
           it "returns messages from the current user" do
             expect(result.messages).to contain_exactly(current_user_message)
@@ -131,12 +142,12 @@ RSpec.describe Chat::SearchMessage do
         fab!(:message_4) { Fabricate(:chat_message, chat_channel: channel, message: "test four") }
         fab!(:message_5) { Fabricate(:chat_message, chat_channel: channel, message: "test five") }
 
-        let(:params) { { guardian: guardian, params: { channel_id: channel.id, term: term, limit: 2 } } }
+        let(:params) do
+          { guardian: guardian, params: { channel_id: channel.id, term: term, limit: 2 } }
+        end
 
         before do
-          [message_4, message_5].each do |message|
-            SearchIndexer.index(message, force: true)
-          end
+          [message_4, message_5].each { |message| SearchIndexer.index(message, force: true) }
         end
 
         it "limits the number of results" do
@@ -148,7 +159,9 @@ RSpec.describe Chat::SearchMessage do
     context "when user cannot view the channel" do
       fab!(:private_channel) { Fabricate(:private_category_channel) }
 
-      let(:params) { { guardian: guardian, params: { channel_id: private_channel.id, term: term } } }
+      let(:params) do
+        { guardian: guardian, params: { channel_id: private_channel.id, term: term } }
+      end
 
       it { is_expected.to be_a_failure }
     end
@@ -167,13 +180,17 @@ RSpec.describe Chat::SearchMessage do
       end
 
       context "when limit is too high" do
-        let(:params) { { guardian: guardian, params: { channel_id: channel.id, term: term, limit: 50 } } }
+        let(:params) do
+          { guardian: guardian, params: { channel_id: channel.id, term: term, limit: 50 } }
+        end
 
         it { is_expected.to be_a_failure }
       end
 
       context "when limit is too low" do
-        let(:params) { { guardian: guardian, params: { channel_id: channel.id, term: term, limit: 0 } } }
+        let(:params) do
+          { guardian: guardian, params: { channel_id: channel.id, term: term, limit: 0 } }
+        end
 
         it { is_expected.to be_a_failure }
       end

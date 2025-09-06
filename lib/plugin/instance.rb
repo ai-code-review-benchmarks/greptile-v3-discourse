@@ -1317,7 +1317,13 @@ class Plugin::Instance
   #         .pluck(:id)
   #     }
   #   )
-  def register_search_index(model_class:, search_data_class:, index_version:, search_data:, load_unindexed_record_ids:)
+  def register_search_index(
+    model_class:,
+    search_data_class:,
+    index_version:,
+    search_data:,
+    load_unindexed_record_ids:
+  )
     # Infer table name from model class
     table_name = model_class.table_name.singularize
 
@@ -1327,7 +1333,7 @@ class Plugin::Instance
       search_data_class: search_data_class,
       index_version: index_version,
       search_data: search_data,
-      load_unindexed_record_ids: load_unindexed_record_ids
+      load_unindexed_record_ids: load_unindexed_record_ids,
     }
 
     DiscoursePluginRegistry.register_search_handler(handler, self)

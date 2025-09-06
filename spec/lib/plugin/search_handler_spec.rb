@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe "Plugin search index registration" do
+RSpec.describe Plugin::Instance do
   let(:plugin) { Plugin::Instance.new }
   let(:mock_model_class) do
     Class.new do
@@ -29,8 +29,6 @@ RSpec.describe "Plugin search index registration" do
       def cooked
         "<p>test cooked content #{@id}</p>"
       end
-
-
     end
   end
 
@@ -62,15 +60,11 @@ RSpec.describe "Plugin search index registration" do
         model_class: mock_model_class,
         search_data_class: mock_search_data_class,
         index_version: 1,
-        search_data: proc do |obj, indexer_helper|
-          {
-            a_weight: obj.message,
-            d_weight: indexer_helper.scrub_html(obj.cooked)[0..100]
-          }
-        end,
-        load_unindexed_record_ids: proc do |limit:, index_version:|
-          [1, 2, 3].take(limit)
-        end
+        search_data:
+          proc do |obj, indexer_helper|
+            { a_weight: obj.message, d_weight: indexer_helper.scrub_html(obj.cooked)[0..100] }
+          end,
+        load_unindexed_record_ids: proc { |limit:, index_version:| [1, 2, 3].take(limit) },
       )
 
       expect(DiscoursePluginRegistry.search_handlers.length).to eq(1)
@@ -89,13 +83,11 @@ RSpec.describe "Plugin search index registration" do
         model_class: mock_model_class,
         search_data_class: mock_search_data_class,
         index_version: 1,
-        search_data: proc do |obj, indexer_helper|
-          {
-            a_weight: obj.message,
-            d_weight: indexer_helper.scrub_html(obj.cooked)
-          }
-        end,
-        load_unindexed_record_ids: proc { |limit:, index_version:| [] }
+        search_data:
+          proc do |obj, indexer_helper|
+            { a_weight: obj.message, d_weight: indexer_helper.scrub_html(obj.cooked) }
+          end,
+        load_unindexed_record_ids: proc { |limit:, index_version:| [] },
       )
 
       handler = DiscoursePluginRegistry.search_handlers.first
@@ -114,11 +106,12 @@ RSpec.describe "Plugin search index registration" do
         search_data_class: mock_search_data_class,
         index_version: 2,
         search_data: proc { |obj, helper| {} },
-        load_unindexed_record_ids: proc do |limit:, index_version:|
-          expect(limit).to be_a(Integer)
-          expect(index_version).to eq(2)
-          [1, 2, 3, 4, 5].take(limit)
-        end
+        load_unindexed_record_ids:
+          proc do |limit:, index_version:|
+            expect(limit).to be_a(Integer)
+            expect(index_version).to eq(2)
+            [1, 2, 3, 4, 5].take(limit)
+          end,
       )
 
       handler = DiscoursePluginRegistry.search_handlers.first
@@ -135,19 +128,15 @@ RSpec.describe "Plugin search index registration" do
         model_class: mock_model_class,
         search_data_class: mock_search_data_class,
         index_version: 1,
-        search_data: proc do |obj, indexer_helper|
-          {
-            a_weight: obj.message,
-            d_weight: indexer_helper.scrub_html(obj.cooked)
-          }
-        end,
-        load_unindexed_record_ids: proc { |limit:, index_version:| [] }
+        search_data:
+          proc do |obj, indexer_helper|
+            { a_weight: obj.message, d_weight: indexer_helper.scrub_html(obj.cooked) }
+          end,
+        load_unindexed_record_ids: proc { |limit:, index_version:| [] },
       )
     end
 
-    after do
-      SearchIndexer.disable
-    end
+    after { SearchIndexer.disable }
 
     it "uses registered index when indexing objects" do
       test_obj = mock_model_class.new(id: 123)
