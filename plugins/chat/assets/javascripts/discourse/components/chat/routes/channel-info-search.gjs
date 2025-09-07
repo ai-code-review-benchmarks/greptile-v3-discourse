@@ -6,6 +6,7 @@ import DiscourseURL from "discourse/lib/url";
 import getURL from "discourse/lib/get-url";
 import { INPUT_DELAY } from "discourse/lib/environment";
 import autoFocus from "discourse/modifiers/auto-focus";
+import tabToSibling from "discourse/modifiers/tab-to-sibling";
 import Component from "@glimmer/component";
 import AsyncContent from "discourse/components/async-content";
 import { ajax } from "discourse/lib/ajax";
@@ -124,6 +125,8 @@ export default class ChatRouteChannelInfoSearch extends Component {
                   class="chat-message-search-entry"
                   role="button"
                   {{on "click" (fn this.visitMessage message)}}
+                  {{on "keypress" (fn this.visitMessage message)}}
+                  {{tabToSibling}}
                   tabindex="0"
                 >
                   <ChatThreadHeading
