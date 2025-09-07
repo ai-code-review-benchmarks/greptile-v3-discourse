@@ -24,6 +24,22 @@ import ChatThreadHeading from "discourse/plugins/chat/discourse/components/chat-
 export default class ChatRouteChannelInfoSearch extends Component {
   @service router;
 
+  /**
+   * Removes mentions from query text for highlighting purposes
+   * @param {string} query - The search query string
+   * @returns {string} - Query with mentions removed
+   */
+  cleanQueryForHighlighting(query) {
+    if (!query) return "";
+
+    // Remove mentions (@username) from the query
+    // This handles cases like "@bas foo", "bar @bas foo", "foo @bas"
+    return query
+      .replace(/@\w+/g, "") // Remove @mentions
+      .replace(/\s+/g, " ") // Replace multiple spaces with single space
+      .trim(); // Remove leading/trailing whitespace
+  }
+
   @bind
   async searchMessages() {
     const response = await ajax(
@@ -119,7 +135,7 @@ export default class ChatRouteChannelInfoSearch extends Component {
                     @message={{message}}
                     @disableMouseEvents={{true}}
                     @includeSeparator={{false}}
-                    @highlightedText={{@query}}
+                    @highlightedText={{this.cleanQueryForHighlighting @query}}
                   />
                 </div>
               {{/each}}
