@@ -95,6 +95,35 @@ export default class ChatRouteChannelInfoSearch extends Component {
     DiscourseURL.routeTo(url);
   }
 
+  @action
+  handleKeypress(message, event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      this.visitMessage(message);
+    }
+  }
+
+  /**
+   * Generate accessible label for a chat message search result
+   * @param {Object} message - The chat message object
+   * @returns {string} - Screen reader friendly description
+   */
+  accessibleMessageLabel(message) {
+    const username = message.user?.username || i18n("chat.deleted_user");
+    const messagePreview =
+      message.excerpt ||
+      (message.message ? message.message.substring(0, 100) + "..." : "");
+    const threadInfo = message.threadTitle
+      ? i18n("chat.search_view.in_thread", { title: message.threadTitle })
+      : "";
+
+    return i18n("chat.search_view.message_result_label", {
+      username,
+      preview: messagePreview,
+      threadInfo,
+    }).trim();
+  }
+
   query = this.args.query;
 
   <template>
@@ -119,15 +148,25 @@ export default class ChatRouteChannelInfoSearch extends Component {
           </:empty>
 
           <:content as |messages|>
-            <div class="chat-message-search-entries">
+            <div id="chat-search-instructions" class="sr-only">
+              {{i18n "chat.search_view.sr_instructions"}}
+            </div>
+
+            <ul
+              class="chat-message-search-entries"
+              role="listbox"
+              aria-label={{i18n "chat.search_view.results_list_label"}}
+            >
               {{#each messages as |message|}}
-                <div
+                <li
                   class="chat-message-search-entry"
-                  role="button"
+                  role="option"
                   {{on "click" (fn this.visitMessage message)}}
-                  {{on "keypress" (fn this.visitMessage message)}}
+                  {{on "keydown" (fn this.handleKeypress message)}}
                   {{tabToSibling}}
                   tabindex="0"
+                  aria-label={{this.accessibleMessageLabel message}}
+                  aria-describedby="chat-search-instructions"
                 >
                   <ChatThreadHeading
                     @thread={{hash title=message.threadTitle}}
@@ -140,9 +179,9 @@ export default class ChatRouteChannelInfoSearch extends Component {
                     @highlightedText={{this.cleanQueryForHighlighting @query}}
                     @interactive={{false}}
                   />
-                </div>
+                </li>
               {{/each}}
-            </div>
+            </ul>
           </:content>
         </AsyncContent>
       </div>

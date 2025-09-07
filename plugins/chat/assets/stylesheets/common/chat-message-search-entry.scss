@@ -3,12 +3,14 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.5rem 0;
+  list-style: none;
+  margin: 0;
 }
 
 .chat-message-search-entry {
   border: 1px solid var(--content-border-color);
-  padding: 0.25rem;
   border-radius: var(--d-border-radius);
+  padding: 0;
   cursor: pointer;
 
   &:hover,
