@@ -13,6 +13,13 @@
   padding: 0;
   cursor: pointer;
 
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem 0.15rem;
+  }
+
   &:hover,
   &:focus {
     box-shadow: var(--shadow-card);
@@ -28,6 +35,7 @@
 
   .chat-thread__heading {
     padding: 0;
+    align-items: center;
 
     h2 {
       font-size: var(--font-0);

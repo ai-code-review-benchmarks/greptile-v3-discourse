@@ -524,6 +524,10 @@ en:
           confirm_export: "This exports all messages from all channels and sends the result to you in a personal message. Are you sure you want to export?"
           export_has_started: "The export has started. You'll receive a PM when it's ready."
 
+      search:
+        title: Search messages
+        aria_label: "Switch to chat search"
+
       my_threads:
         title: My Threads
         aria_label: "Switch to my threads list"

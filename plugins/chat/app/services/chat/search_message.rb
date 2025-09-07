@@ -7,7 +7,7 @@ module Chat
   #  ::Chat::SearchMessage.call(
   #    guardian: guardian,
   #    params: {
-  #      term: "foo",
+  #      query: "foo",
   #      channel_id: 1,
   #    }
   #  )
@@ -18,7 +18,7 @@ module Chat
     # @!method self.call(guardian:, params:)
     #   @param [Guardian] guardian
     #   @param [Hash] params
-    #   @option params [String] :term The term used to query the results
+    #   @option params [String] :query The query used to query the results
     #   @option params [Integer] :channel_id ID of the channel to scope the search
     #   @return [Service::Base::Context]
 
@@ -43,42 +43,52 @@ module Chat
     end
 
     params do
-      attribute :term, :string, default: ""
+      attribute :query, :string, default: ""
       attribute :channel_id, :integer
       attribute :limit, :integer, default: 20
 
-      validates :channel_id, presence: true
       validates :limit, numericality: { in: 1..40 }
     end
 
-    model :channel
+    model :channel, optional: true
     policy :can_view_channel
     model :messages, optional: true
 
     private
 
     def fetch_channel(params:)
-      ::Chat::Channel.find_by(id: params.channel_id)
+      ::Chat::Channel.find_by(id: params.channel_id) if params.channel_id
     end
 
     def can_view_channel(guardian:, channel:)
-      guardian.can_preview_chat_channel?(channel)
+      channel ? guardian.can_preview_chat_channel?(channel) : true
     end
 
     def fetch_messages(params:, guardian:, channel:)
-      return ::Chat::Message.none if params.term.blank?
+      return ::Chat::Message.none if params.query.blank?
 
       @guardian = guardian
-      cleaned_term = Search.clean_term(params.term)
-      processed_term = process_advanced_search!(cleaned_term)
+      cleaned_query = Search.clean_term(params.query)
+      processed_query = process_advanced_search!(cleaned_query)
 
-      messages = ::Chat::Message.joins(:chat_channel).where("chat_channels.id IN (?)", channel.id)
+      messages = ::Chat::Message.joins(:chat_channel)
+
+      if channel
+        messages = messages.where("chat_channels.id IN (?)", channel.id)
+      else
+        messages =
+          messages.where(
+            "chat_channels.id IN (?)",
+            ChannelFetcher.all_secured_channel_ids(guardian),
+          )
+      end
+
       messages = apply_filters(messages)
 
-      if processed_term.present?
-        prepared_term = Search.prepare_data(processed_term)
+      if processed_query.present?
+        prepared_query = Search.prepare_data(processed_query)
         ts_config = Search.ts_config
-        ts_query = Search.ts_query(term: prepared_term, ts_config: ts_config)
+        ts_query = Search.ts_query(term: prepared_query, ts_config: ts_config)
         messages =
           messages.joins(:message_search_data).where(
             "chat_message_search_data.search_data @@ #{ts_query}",
@@ -92,8 +102,8 @@ module Chat
 
     private
 
-    def process_advanced_search!(term)
-      term
+    def process_advanced_search!(query)
+      query
         .to_s
         .split(/\s+/)
         .map do |word|
