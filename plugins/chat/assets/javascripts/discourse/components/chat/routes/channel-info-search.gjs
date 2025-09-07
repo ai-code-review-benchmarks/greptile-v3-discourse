@@ -69,7 +69,6 @@ export default class ChatRouteChannelInfoSearch extends Component {
 
   @action
   debounceFilterChange(query) {
-    console.log(query);
     this.router.replaceWith({ queryParams: { q: query } });
   }
 
@@ -136,6 +135,7 @@ export default class ChatRouteChannelInfoSearch extends Component {
                     @disableMouseEvents={{true}}
                     @includeSeparator={{false}}
                     @highlightedText={{this.cleanQueryForHighlighting @query}}
+                    @interactive={{false}}
                   />
                 </div>
               {{/each}}

@@ -11,6 +11,11 @@
   border-radius: var(--d-border-radius);
   cursor: pointer;
 
+  &:hover,
+  &:focus {
+    box-shadow: var(--shadow-card);
+  }
+
   .search-highlight {
     background: var(--highlight-medium);
   }

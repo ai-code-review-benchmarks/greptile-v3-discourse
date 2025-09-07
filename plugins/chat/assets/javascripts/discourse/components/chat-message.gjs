@@ -617,7 +617,10 @@ export default class ChatMessage extends Component {
                   @threadContext={{this.threadContext}}
                 />
               {{else}}
-                <ChatMessageAvatar @message={{@message}} />
+                <ChatMessageAvatar
+                  @message={{@message}}
+                  @interactive={{@interactive}}
+                />
               {{/if}}
 
               <div class="chat-message-content">
@@ -642,6 +645,7 @@ export default class ChatMessage extends Component {
                           @onReaction={{this.messageInteractor.react}}
                           @message={{@message}}
                           @showTooltip={{true}}
+                          @interactive={{@interactive}}
                         />
                       {{/each}}
 
