@@ -1,5 +1,8 @@
 import { DEBUG } from "@glimmer/env";
-import { isDevelopment } from "discourse/lib/environment";
+import { _backburner } from "@ember/runloop";
+import { getSettledState, waitUntil } from "@ember/test-helpers";
+import $ from "jquery";
+import { isDevelopment, isRailsTesting } from "discourse/lib/environment";
 
 const KEY = "discourse__dev_tools";
 
@@ -41,6 +44,86 @@ export default {
       storeValue(false);
       window.location.reload();
     };
+
+    if (isRailsTesting()) {
+      _backburner.DEBUG = true;
+
+      window.emberGetSettledState = getSettledState;
+
+      const pendingRequests = [];
+
+      const incrementAjaxPendingRequests = (_event, xhr, settings) => {
+        if (
+          settings.url.includes("/message-bus") ||
+          settings.url.includes("/presence/")
+        ) {
+          return;
+        }
+
+        // console.log(`[${Date.now() / 1000}] added`, settings.url);
+
+        pendingRequests.push(xhr);
+      };
+
+      const decrementAjaxPendingRequests = (_event, xhr) => {
+        for (let i = 0; i < pendingRequests.length; i++) {
+          if (xhr === pendingRequests[i]) {
+            // console.log(`[${Date.now() / 1000}] removed`, settings.url);
+            pendingRequests.splice(i, 1);
+            break;
+          }
+        }
+      };
+
+      $(document)
+        .on("ajaxSend", incrementAjaxPendingRequests)
+        .on("ajaxComplete ajaxError", decrementAjaxPendingRequests);
+
+      window.emberSettled = async (timeoutSeconds) => {
+        await new Promise((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(r))
+        );
+
+        timeoutSeconds = timeoutSeconds || 10;
+        const start = Date.now();
+
+        return waitUntil(
+          () => {
+            if ((Date.now() - start) / 1000 > timeoutSeconds) {
+              // eslint-disable-next-line no-console
+              console.error("Timed out waiting for Ember to settle");
+              return true;
+            }
+
+            const state = getSettledState();
+
+            // console.log(`[${Date.now() / 1000}]`, {
+            //   hasRunLoop: state.hasRunLoop,
+            //   hasPendingTransitions: state.hasPendingTransitions,
+            //   isRenderPending: state.isRenderPending,
+            //   pendingRequests: pendingRequests.length,
+            //   hasPendingWaiters: state.hasPendingWaiters,
+            // });
+
+            // console.log(`[${Date.now() / 1000}]`, _backburner.getDebugInfo());
+
+            const settled =
+              !state.hasRunLoop &&
+              !state.hasPendingTransitions &&
+              !state.isRenderPending &&
+              !state.hasPendingWaiters &&
+              pendingRequests.length === 0;
+
+            // if (settled) {
+            //   console.log(`[${Date.now() / 1000}] SETTLED!`);
+            // }
+
+            return settled;
+          },
+          { timeout: Infinity }
+        ).then(() => {});
+      };
+    }
 
     if (parseStoredValue() ?? defaultEnabled) {
       // eslint-disable-next-line no-console

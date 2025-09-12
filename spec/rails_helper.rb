@@ -435,6 +435,7 @@ RSpec.configure do |config|
 
       def synchronize(seconds = nil, errors: nil)
         return super if session.synchronized # Nested synchronize. We only want our logic on the outermost call.
+
         begin
           super
         rescue StandardError => e
@@ -475,6 +476,52 @@ RSpec.configure do |config|
         end
       end
     end
+
+    module CapybaraPlaywrightNodePatch
+      NODE_METHODS_TO_PATCH = %i[
+        click
+        right_click
+        double_click
+        send_keys
+        hover
+        drag_to
+        scroll_by
+        scroll_to
+        trigger
+        set
+      ]
+
+      NODE_METHODS_TO_PATCH.each do |method_name|
+        define_method(method_name) do |*args, **options|
+          result = super(*args, **options)
+          # now = Time.now.to_f
+          @driver.send(:session).evaluate_async_script(
+            "window.emberSettled ? window.emberSettled().then(arguments[0]) : arguments[0]()",
+          )
+          # puts "[#{Time.now.to_f}] #{method_name}: END IN #{Time.now.to_f - now}"
+          result
+        end
+      end
+    end
+
+    module CapybaraPlaywrightBrowserPatch
+      METHODS_TO_PATCH = %i[visit go_back go_forward refresh resize_window_to]
+
+      METHODS_TO_PATCH.each do |method_name|
+        define_method(method_name) do |*args, **options|
+          result = super(*args, **options)
+          # now = Time.now.to_f
+          @driver.send(:session).evaluate_async_script(
+            "window.emberSettled ? window.emberSettled('#{method_name}').then(arguments[0]) : arguments[0]()",
+          )
+          # puts "[#{Time.now.to_f}] #{method_name}: #{Time.now.to_f - now}"
+          result
+        end
+      end
+    end
+
+    Capybara::Playwright::Node.prepend(CapybaraPlaywrightNodePatch)
+    Capybara::Playwright::Browser.prepend(CapybaraPlaywrightBrowserPatch)
 
     config.after(:each, type: :system) do |example|
       # If test passed, but we had a capybara finder timeout, raise it now
